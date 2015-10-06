@@ -1,0 +1,70 @@
+corsEnable: false
+pricingBaseUri: {{ app_web_pricing_base_uri }}
+recommendationBaseUri: {{ app_web_recommendation_base_uri }}
+
+server:
+  type: simple
+  applicationContextPath: /
+  adminContextPath: /admin
+  rootPath: /api/*
+  connector:
+    type: http
+    port: {{ app_web_http_port }}
+  requestLog:
+    timeZone: UTC
+    appenders:
+    - type: file
+      threshold: ALL
+      currentLogFilename: log/web-access.log
+      archive: true
+      archivedLogFilenamePattern: log/web-access-%d.log.gz
+      archivedFileCount: 7
+      timeZone: UTC
+
+logging:
+  level: INFO
+  loggers:
+    com.polaris.cd: DEBUG
+  appenders:
+    - type: file
+      threshold: DEBUG
+      logFormat: "%-6level [%d{HH:mm:ss.SSS}] [%t] %logger{5} - %msg %n"
+      currentLogFilename: log/web.log
+      archive: true
+      archivedLogFilenamePattern: log/web-%d.log.gz
+      archivedFileCount: 7
+      timeZone: UTC
+
+pricingClient:
+  timeout: 500ms
+  connectionTimeout: 500ms
+  timeToLive: 1h
+  cookiesEnabled: false
+  maxConnections: 1024
+  maxConnectionsPerRoute: 1024
+  keepAlive: 10m
+  retries: 0
+  userAgent: cd-web (pricing)
+  minThreads: 1
+  maxThreads: 128
+  workQueueSize: 8
+  gzipEnabled: true
+  gzipEnabledForRequests: true
+  chunkedEncodingEnabled: true
+
+recommendationClient:
+  timeout: 500ms
+  connectionTimeout: 500ms
+  timeToLive: 1h
+  cookiesEnabled: false
+  maxConnections: 1024
+  maxConnectionsPerRoute: 1024
+  keepAlive: 10m
+  retries: 0
+  userAgent: cd-web (recommendation)
+  minThreads: 1
+  maxThreads: 128
+  workQueueSize: 8
+  gzipEnabled: true
+  gzipEnabledForRequests: true
+  chunkedEncodingEnabled: true

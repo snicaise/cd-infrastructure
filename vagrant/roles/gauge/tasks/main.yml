@@ -1,0 +1,45 @@
+---
+# tasks file for gauge
+
+- name: check if gauge is downloaded
+  stat: path=/opt/gauge/gauge-0.1.8-linux.x86_64.zip
+  register: gauge_installer
+
+- name: create gauge install dir
+  file: path=/opt/gauge state=directory
+  when: not gauge_installer.stat.exists
+
+- name: download gauge
+  get_url:
+    url: "https://github.com/getgauge/gauge/releases/download/v0.1.8/gauge-0.1.8-linux.x86_64.zip"
+    dest: "/opt/gauge/gauge-0.1.8-linux.x86_64.zip"
+  when: not gauge_installer.stat.exists
+
+- name: check if gauge is unzipped
+  stat: path=/opt/gauge/install.sh
+  register: gauge_unzip
+
+- name: unzip gauge
+  unarchive: src=/opt/gauge/gauge-0.1.8-linux.x86_64.zip dest=/opt/gauge/ copy=no
+  when: not gauge_unzip.stat.exists
+
+- name: give permissions to gauge temp directory ...
+  file: path=/tmp/gauge_temp/ state=directory owner={{ gauge_user }} group={{ gauge_group }} mode=0777
+
+- name: install gauge
+  command: chdir=/opt/gauge/ creates=/usr/local/bin/gauge bash -c ./install.sh
+
+- name: install java plugin
+  become: true
+  become_user: "{{ gauge_user }}"
+  command: gauge --install java creates="~{{ gauge_user }}/.gauge/plugins/java"
+
+- name: install html-report plugins
+  become: true
+  become_user: "{{ gauge_user }}"
+  command: gauge --install html-report creates="~{{ gauge_user }}/.gauge/plugins/html-report"
+
+- name: install xml-report plugins
+  become: true
+  become_user: "{{ gauge_user }}"
+  command: gauge --install xml-report creates="~{{ gauge_user }}/.gauge/plugins/xml-report"

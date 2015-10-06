@@ -1,0 +1,12 @@
+---
+
+app_pricing_user: pricing-dev
+app_pricing_group: pricing-dev
+app_pricing_home: "/opt/{{ app_pricing_user }}"
+
+app_pricing_http_port: 8080
+
+app_pricing_artifact:
+
+app_pricing_java_opts: -Xmx128m -Xms128m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$LOGS_HOME
+app_pricing_dw_extra_args: ""

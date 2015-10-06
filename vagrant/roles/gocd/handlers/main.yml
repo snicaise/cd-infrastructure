@@ -1,0 +1,14 @@
+---
+
+- name: restart go-server
+  service: name=go-server state=restarted
+
+- name: restart go-agents
+  shell: ls -l /etc/default/go-agent-?
+  register: go_agent_services
+  notify:
+     - restart go-agent
+
+- name: restart go-agent
+  service: name={{ item | basename }} state=restarted
+  with_items: go_agent_services.stdout_lines

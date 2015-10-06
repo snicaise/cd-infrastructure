@@ -1,0 +1,36 @@
+---
+
+- name: Install gocd agent
+  apt: pkg=go-agent={{ gocd_version }} state=present
+
+- name: Create gocd agent defaults file
+  template: src=go-agent-defaults dest=/etc/default/go-agent owner=go group=go mode=0644
+  notify: restart go-agents
+
+- file: src=/etc/init.d/go-agent dest=/etc/init.d/go-agent-{{item}} state=link owner=root group=root
+  with_sequence: count="{{ gocd_agent_count }}"
+
+- file: src=/usr/share/go-agent dest=/usr/share/go-agent-{{item}} state=link owner=root group=root
+  with_sequence: count="{{ gocd_agent_count }}"
+
+- file: src=/etc/default/go-agent dest=/etc/default/go-agent-{{item}} state=link owner=go group=go
+  with_sequence: count="{{ gocd_agent_count }}"
+
+- file: path=/var/lib/go-agent-{{item}} state=directory owner=go group=go
+  with_sequence: count="{{ gocd_agent_count }}"
+
+- file: path=/var/log/go-agent-{{item}} state=directory owner=go group=go
+  with_sequence: count="{{ gocd_agent_count }}"
+
+- name: enable gocd agents
+  service: name=go-agent-{{item}} state=started enabled=yes
+  with_sequence: count="{{ gocd_agent_count }}"
+
+- name: disable gocd default agent
+  service: name=go-agent state=stopped enabled=false
+
+- name: remove gocd default agent working directory
+  file: path=/var/lib/go-agent state=absent
+
+- name: remove gocd default agent log directory
+  file: path=/var/log/go-agent state=absent

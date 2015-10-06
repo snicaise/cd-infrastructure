@@ -1,0 +1,21 @@
+---
+
+gocd_version: 15.2.0-2248
+
+gocd_server_host: localhost
+gocd_server_port: 8153
+gocd_server_ssl_port: 8154
+
+gocd_server_password_file: /etc/go/passwd
+gocd_admin_user: admin
+gocd_admin_password: password
+
+gocd_java_home: /usr/lib/jvm/java-7-openjdk-amd64/jre
+
+gocd_ssh_private_key: ~/.ssh/id_gocd
+gocd_ssh_public_key: ~/.ssh/id_gocd.pub
+gocd_ssh_know_hosts:
+  - github.com
+  - bitbucket.org
+
+gocd_agent_count: 1

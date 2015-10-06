@@ -1,0 +1,78 @@
+---
+
+- name: Assert role variables
+  assert:
+    that:
+      - app_recommendation_user is defined
+      - app_recommendation_group is defined
+      - app_recommendation_home is defined
+      - app_recommendation_artifact is defined
+
+- name: create app group
+  group: name={{ app_recommendation_group }}
+
+- name: create app user
+  user: name={{ app_recommendation_user }}
+    group={{ app_recommendation_group }}
+    home={{ app_recommendation_home }}
+    createhome=yes
+    system=yes
+
+- name: create app dir
+  file: path={{ app_recommendation_home }}/app state=directory
+
+- name: create log dir
+  file: path={{ app_recommendation_home }}/log state=directory
+
+- name: copy app
+  copy: src={{ app_recommendation_artifact }} dest={{ app_recommendation_home }}/app
+  notify: restart app_recommendation
+
+- name: copy configuration file
+  template: src=server.yml.j2 dest={{ app_recommendation_home }}/app/server.yml mode=0644
+  notify: restart app_recommendation
+
+- name: copy keystore
+  copy: src=server.keystore dest={{ app_recommendation_home }}/app/server.keystore mode=0644
+  notify: restart app_recommendation
+
+- name: change ownership of app installation
+  file: path={{ app_recommendation_home }} owner={{ app_recommendation_user }} group={{ app_recommendation_group }} state=directory recurse=yes
+
+- name: copy upstart script
+  template: src=upstart.j2 dest=/etc/init/{{ app_recommendation_user }}.conf
+    owner=root
+    group=root
+    mode=0644
+    backup=yes
+  notify: restart app_recommendation
+
+- name: enable app
+  service: name={{ app_recommendation_user }} state=started enabled=yes
+
+- meta: flush_handlers
+
+- debug: msg="Testing app_recommendation - http://{{ app_recommendation_test_base_uri }}:{{ app_recommendation_http_port }}"
+- wait_for: port={{ app_recommendation_http_port }} timeout=60
+
+- uri:
+    url: "http://{{ app_recommendation_test_base_uri }}:{{ app_recommendation_http_port }}/admin/ping"
+    method: GET
+    status_code: 200
+    return_content: yes
+  register: ping
+- debug: var=ping
+- assert:
+   that:
+     - "'pong' in ping.content"
+
+- uri:
+    url: "http://{{ app_recommendation_test_base_uri }}:{{ app_recommendation_http_port }}/admin/healthcheck"
+    method: GET
+    status_code: 200
+    return_content: yes
+  register: healthcheck
+- debug: var=healthcheck
+- assert:
+   that:
+     - "'false' not in healthcheck.content"

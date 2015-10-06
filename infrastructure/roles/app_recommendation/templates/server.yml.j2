@@ -1,0 +1,35 @@
+server:
+  type: simple
+  applicationContextPath: /
+  adminContextPath: /admin
+
+  connector:
+    type: http
+    port: {{ app_recommendation_http_port }}
+
+  requestLog:
+    timeZone: UTC
+    appenders:
+    - type: file
+      threshold: ALL
+      currentLogFilename: log/recommendation-access.log
+      archive: true
+      archivedLogFilenamePattern: log/recommendation-access-%d.log.gz
+      archivedFileCount: 7
+      timeZone: UTC
+
+logging:
+  level: INFO
+
+  loggers:
+    com.polaris.cd: DEBUG
+
+  appenders:
+    - type: file
+      threshold: DEBUG
+      logFormat: "%-6level [%d{HH:mm:ss.SSS}] [%t] %logger{5} - %msg %n"
+      currentLogFilename: log/recommendation.log
+      archive: true
+      archivedLogFilenamePattern: log/recommendation-%d.log.gz
+      archivedFileCount: 7
+      timeZone: UTC

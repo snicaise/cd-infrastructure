@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  author: Sébastien Nicaise
+  description: Ansible Playbook to install cd-pricing.
+  license: MIT
+  min_ansible_version: 1.9
+  platforms:
+  - name: Ubuntu
+    versions:
+    - trusty
+  categories:
+  - development
+dependencies:
+  - { role: java }

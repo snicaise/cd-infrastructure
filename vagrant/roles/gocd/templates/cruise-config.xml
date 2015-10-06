@@ -1,0 +1,472 @@
+<?xml version="1.0" encoding="utf-8"?>
+<cruise xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="cruise-config.xsd" schemaVersion="75">
+  <server artifactsdir="artifacts" commandRepositoryLocation="default">
+    <security>
+      <passwordFile path="/etc/go/passwd" />
+      <admins>
+        <user>admin</user>
+      </admins>
+    </security>
+  </server>
+  <pipelines group="dev">
+    <pipeline name="recommendation" labeltemplate="1.0.${COUNT}" isLocked="false">
+      <environmentvariables>
+        <variable name="JAVA_HOME">
+          <value>/usr/lib/jvm/java-8-oracle</value>
+        </variable>
+      </environmentvariables>
+      <materials>
+        <git url="git@github.com:snicaise/cd-recommendation.git" materialName="git" />
+      </materials>
+      <stage name="commit" cleanWorkingDir="true">
+        <jobs>
+          <job name="build">
+            <tasks>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>mvn -B org.codehaus.mojo:versions-maven-plugin:2.1:set -DnewVersion=${GO_PIPELINE_LABEL}</arg>
+                <runif status="passed" />
+              </exec>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>mvn clean install</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+            <artifacts>
+              <test src="**/target/surefire-reports" />
+              <artifact src="**/target/*.jar" dest="artifacts" />
+            </artifacts>
+          </job>
+        </jobs>
+      </stage>
+      <stage name="component-test">
+        <jobs>
+          <job name="in-process-test">
+            <tasks>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>mvn -B test -P component-tests</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+            <artifacts>
+              <test src="**/target/surefire-reports" />
+            </artifacts>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+    <pipeline name="pricing" labeltemplate="1.0.${COUNT}" isLocked="false">
+      <environmentvariables>
+        <variable name="JAVA_HOME">
+          <value>/usr/lib/jvm/java-8-oracle</value>
+        </variable>
+      </environmentvariables>
+      <materials>
+        <git url="git@github.com:snicaise/cd-pricing.git" materialName="git" />
+      </materials>
+      <stage name="commit" cleanWorkingDir="true">
+        <jobs>
+          <job name="build">
+            <tasks>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>mvn -B org.codehaus.mojo:versions-maven-plugin:2.1:set -DnewVersion=${GO_PIPELINE_LABEL}</arg>
+                <runif status="passed" />
+              </exec>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>mvn clean install</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+            <artifacts>
+              <test src="**/target/surefire-reports" />
+              <artifact src="**/target/*.jar" dest="artifacts" />
+            </artifacts>
+          </job>
+        </jobs>
+      </stage>
+      <stage name="component-test">
+        <jobs>
+          <job name="in-process-test">
+            <tasks>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>mvn -B test -P component-tests</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+            <artifacts>
+              <test src="**/target/surefire-reports" />
+            </artifacts>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+    <pipeline name="web" labeltemplate="1.0.${COUNT}" isLocked="false">
+      <environmentvariables>
+        <variable name="JAVA_HOME">
+          <value>/usr/lib/jvm/java-8-oracle</value>
+        </variable>
+      </environmentvariables>
+      <materials>
+        <git url="git@github.com:snicaise/cd-web.git" materialName="git" />
+      </materials>
+      <stage name="commit" cleanWorkingDir="true">
+        <jobs>
+          <job name="build">
+            <tasks>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>mvn -B org.codehaus.mojo:versions-maven-plugin:2.1:set -DnewVersion=${GO_PIPELINE_LABEL}</arg>
+                <runif status="passed" />
+              </exec>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>mvn -B clean install</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+            <artifacts>
+              <test src="**/target/surefire-reports" />
+              <artifact src="**/target/*.jar" dest="artifacts" />
+            </artifacts>
+          </job>
+        </jobs>
+      </stage>
+      <stage name="integration-test">
+        <jobs>
+          <job name="in-process-test">
+            <tasks>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>mvn -B test -P integration-tests</arg>
+              </exec>
+            </tasks>
+            <artifacts>
+              <artifact src="**/target/surefire-reports" />
+            </artifacts>
+          </job>
+        </jobs>
+      </stage>
+      <stage name="component-test">
+        <jobs>
+          <job name="in-process-test">
+            <tasks>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>mvn -B test -P component-tests</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+            <artifacts>
+              <test src="**/target/surefire-reports" />
+            </artifacts>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+    <pipeline name="integration" labeltemplate="site-${COUNT}_r${recommendation}_p${pricing}_w${web}" isLocked="false">
+      <environmentvariables>
+        <variable name="JAVA_HOME">
+          <value>/usr/lib/jvm/java-8-oracle</value>
+        </variable>
+        <variable name="ANSIBLE_FORCE_COLOR">
+          <value>true</value>
+        </variable>
+      </environmentvariables>
+      <materials>
+        <pipeline pipelineName="recommendation" stageName="component-test" />
+        <pipeline pipelineName="pricing" stageName="component-test" materialName="pricing" />
+        <pipeline pipelineName="web" stageName="component-test" materialName="web" />
+        <git url="git@github.com:snicaise/cd-endtoend-test.git" materialName="endtoend-test" />
+      </materials>
+      <stage name="deploy-integration" fetchMaterials="false" cleanWorkingDir="true">
+        <jobs>
+          <job name="deploy-all">
+            <tasks>
+              <fetchartifact pipeline="recommendation" stage="commit" job="build" srcdir="artifacts/recommendation-core/target/">
+                <runif status="passed" />
+              </fetchartifact>
+              <fetchartifact pipeline="pricing" stage="commit" job="build" srcdir="artifacts/pricing-core/target/">
+                <runif status="passed" />
+              </fetchartifact>
+              <fetchartifact pipeline="web" stage="commit" job="build" srcdir="artifacts/web-core/target/">
+                <runif status="passed" />
+              </fetchartifact>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>ansible-playbook -c paramiko -i ~/ansible/inventory/integration -u vagrant ~/ansible/site.yml --extra-vars "app_recommendation_artifact=`pwd`/target/recommendation-core.jar app_pricing_artifact=`pwd`/target/pricing-core.jar app_web_artifact=`pwd`/target/web-core.jar"</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+      <stage name="endtoend-test">
+        <jobs>
+          <job name="endtoend-test">
+            <tasks>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>echo "Testing ..."</arg>
+              </exec>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>mvn -B clean test -DspecsDir=specs -Denv="integration"</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+            <tabs>
+              <tab name="gauge" path="gauge/html-report/index.html" />
+            </tabs>
+            <artifacts>
+              <test src="target/reports/*" dest="gauge/" />
+              <test src="target/logs/*" dest="gauge/" />
+            </artifacts>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+  </pipelines>
+  <pipelines group="release">
+    <pipeline name="uat" labeltemplate="${integration}" isLocked="false">
+      <environmentvariables>
+        <variable name="ANSIBLE_FORCE_COLOR">
+          <value>true</value>
+        </variable>
+      </environmentvariables>
+      <materials>
+        <pipeline pipelineName="integration" stageName="endtoend-test" />
+      </materials>
+      <stage name="uat-begin" fetchMaterials="false">
+        <approval type="manual" />
+        <jobs>
+          <job name="create-uat-ticket">
+            <tasks>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>echo "Début UAT"</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+      <stage name="deploy-uat" cleanWorkingDir="true">
+        <jobs>
+          <job name="deploy-all">
+            <tasks>
+              <fetchartifact pipeline="recommendation/integration" stage="commit" job="build" srcdir="artifacts/recommendation-core/target/">
+                <runif status="passed" />
+              </fetchartifact>
+              <fetchartifact pipeline="pricing/integration" stage="commit" job="build" srcdir="artifacts/pricing-core/target/">
+                <runif status="passed" />
+              </fetchartifact>
+              <fetchartifact pipeline="web/integration" stage="commit" job="build" srcdir="artifacts/web-core/target/">
+                <runif status="passed" />
+              </fetchartifact>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>ansible-playbook -c paramiko -i ~/ansible/inventory/uat -u vagrant ~/ansible/site.yml --extra-vars "app_recommendation_artifact=`pwd`/target/recommendation-core.jar app_pricing_artifact=`pwd`/target/pricing-core.jar app_web_artifact=`pwd`/target/web-core.jar"</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+      <stage name="uat-end" fetchMaterials="false" cleanWorkingDir="true">
+        <approval type="manual" />
+        <jobs>
+          <job name="close-uat-ticket">
+            <tasks>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>echo "UAT OK"</arg>
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+    <pipeline name="performance" labeltemplate="${integration}" isLocked="false">
+      <environmentvariables>
+        <variable name="JAVA_HOME">
+          <value>/usr/lib/jvm/java-8-oracle</value>
+        </variable>
+        <variable name="ANSIBLE_FORCE_COLOR">
+          <value>true</value>
+        </variable>
+        <variable name="BASE_URL">
+          <value>http://server2.dev.polaris.com:7080/api</value>
+        </variable>
+      </environmentvariables>
+      <materials>
+        <pipeline pipelineName="integration" stageName="endtoend-test" />
+        <git url="git@github.com:snicaise/cd-performance-test.git" materialName="performance" />
+      </materials>
+      <stage name="performance-begin">
+        <approval type="manual" />
+        <jobs>
+          <job name="no-op">
+            <tasks>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>echo "noop"</arg>
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+      <stage name="deploy-performance" fetchMaterials="false" cleanWorkingDir="true">
+        <jobs>
+          <job name="deploy-all">
+            <tasks>
+              <fetchartifact pipeline="recommendation/integration" stage="commit" job="build" srcdir="artifacts/recommendation-core/target/">
+                <runif status="passed" />
+              </fetchartifact>
+              <fetchartifact pipeline="pricing/integration" stage="commit" job="build" srcdir="artifacts/pricing-core/target/">
+                <runif status="passed" />
+              </fetchartifact>
+              <fetchartifact pipeline="web/integration" stage="commit" job="build" srcdir="artifacts/web-core/target/">
+                <runif status="passed" />
+              </fetchartifact>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>ansible-playbook -v -c paramiko -i ~/ansible/inventory/performance  -u vagrant ~/ansible/site.yml --extra-vars "app_recommendation_artifact=`pwd`/target/recommendation-core.jar app_pricing_artifact=`pwd`/target/pricing-core.jar app_web_artifact=`pwd`/target/web-core.jar"</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+      <stage name="performance-test" cleanWorkingDir="true">
+        <jobs>
+          <job name="gatling">
+            <tasks>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>mvn -B gatling:execute -Dgatling.simulationClass=web.BookingSimulation -Dbase_url=${BASE_URL}</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+            <tabs>
+              <tab name="gatling" path="gatling" />
+            </tabs>
+            <artifacts>
+              <test src="target/gatling/*" dest="gatling/" />
+            </artifacts>
+          </job>
+        </jobs>
+      </stage>
+      <stage name="performance-end">
+        <approval type="manual" />
+        <jobs>
+          <job name="performance-end">
+            <tasks>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>echo "Performances OK"</arg>
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+    <pipeline name="production" labeltemplate="${uat}" isLocked="false">
+      <environmentvariables>
+        <variable name="ANSIBLE_FORCE_COLOR">
+          <value>true</value>
+        </variable>
+      </environmentvariables>
+      <materials>
+        <pipeline pipelineName="uat" stageName="uat-end" />
+        <pipeline pipelineName="performance" stageName="performance-end" materialName="performance" />
+      </materials>
+      <stage name="production-begin">
+        <approval type="manual" />
+        <jobs>
+          <job name="create-production-ticket">
+            <tasks>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>echo "create-production-ticket"</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+      <stage name="deploy-prod">
+        <jobs>
+          <job name="deploy-all">
+            <tasks>
+              <fetchartifact pipeline="recommendation/integration/uat" stage="commit" job="build" srcdir="artifacts/recommendation-core/target/">
+                <runif status="passed" />
+              </fetchartifact>
+              <fetchartifact pipeline="pricing/integration/uat" stage="commit" job="build" srcdir="artifacts/pricing-core/target/">
+                <runif status="passed" />
+              </fetchartifact>
+              <fetchartifact pipeline="web/integration/uat" stage="commit" job="build" srcdir="artifacts/web-core/target/">
+                <runif status="passed" />
+              </fetchartifact>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>ansible-playbook -vv -c paramiko -i ~/ansible/inventory/production -u vagrant ~/ansible/site.yml --extra-vars "app_recommendation_artifact=`pwd`/target/recommendation-core.jar app_pricing_artifact=`pwd`/target/pricing-core.jar app_web_artifact=`pwd`/target/web-core.jar"</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+      <stage name="production-end">
+        <jobs>
+          <job name="close-production-ticket">
+            <tasks>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>echo "close-production-ticket"</arg>
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+  </pipelines>
+  <pipelines group="ops">
+    <pipeline name="refresh-ansible" isLocked="false">
+      <materials>
+        <git url="git@github.com:snicaise/cd-infrastructure.git">
+          <filter>
+            <ignore pattern="vagrant" />
+          </filter>
+        </git>
+      </materials>
+      <stage name="refresh-ansible">
+        <jobs>
+          <job name="copy-scripts" runOnAllAgents="true">
+            <tasks>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>rm -rf ~/ansible</arg>
+                <runif status="passed" />
+              </exec>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>mkdir -p ~/ansible</arg>
+                <runif status="passed" />
+              </exec>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>cp -R infrastructure/* ~/ansible</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+  </pipelines>
+</cruise>

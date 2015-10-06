@@ -1,0 +1,11 @@
+---
+
+app_web_user: web-prod
+app_web_home: "/opt/{{ app_web_user }}"
+
+app_web_http_port: 8080
+
+app_web_test_base_uri: "{{ ansible_hostname }}"
+
+app_web_pricing_base_uri: "http://{{ hostvars[groups['app_pricing'][0]]['ansible_eth0']['ipv4']['address'] }}:{{ app_pricing_http_port }}"
+app_web_recommendation_base_uri: "http://{{ hostvars[groups['app_recommendation'][0]]['ansible_eth0']['ipv4']['address'] }}:{{ app_recommendation_http_port }}"

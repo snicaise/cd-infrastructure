@@ -1,0 +1,16 @@
+---
+
+- hosts: app_pricing
+  sudo: yes
+
+  pre_tasks:
+    - name: try to stop app
+      service: name={{ app_pricing_user }} state=stopped
+      ignore_errors: yes
+
+    - name: purge old version
+      file: path={{ app_pricing_home }} state=absent
+      ignore_errors: yes
+
+  roles:
+    - { role: app_pricing }

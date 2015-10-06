@@ -1,0 +1,78 @@
+---
+
+- name: Assert role variables
+  assert:
+    that:
+      - app_web_user is defined
+      - app_web_group is defined
+      - app_web_home is defined
+      - app_web_artifact is defined
+
+- name: create app group
+  group: name={{ app_web_group }}
+
+- name: create app user
+  user: name={{ app_web_user }}
+    group={{ app_web_group }}
+    home={{ app_web_home }}
+    createhome=yes
+    system=yes
+
+- name: create app dir
+  file: path={{ app_web_home }}/app state=directory
+
+- name: create log dir
+  file: path={{ app_web_home }}/log state=directory
+
+- name: copy app
+  copy: src={{ app_web_artifact }} dest={{ app_web_home }}/app
+  notify: restart app_web
+
+- name: copy configuration file
+  template: src=server.yml.j2 dest={{ app_web_home }}/app/server.yml mode=0644
+  notify: restart app_web
+
+- name: copy keystore
+  copy: src=server.keystore dest={{ app_web_home }}/app/server.keystore mode=0644
+  notify: restart app_web
+
+- name: change ownership of app installation
+  file: path={{ app_web_home }} owner={{ app_web_user }} group={{ app_web_group }} state=directory recurse=yes
+
+- name: copy upstart script
+  template: src=upstart.j2 dest=/etc/init/{{ app_web_user }}.conf
+    owner=root
+    group=root
+    mode=0644
+    backup=yes
+  notify: restart app_web
+
+- name: enable app
+  service: name={{ app_web_user }} state=started enabled=yes
+
+- meta: flush_handlers
+
+- debug: msg="Testing app_web - http://{{ app_web_test_base_uri }}:{{ app_web_http_port }}"
+- wait_for: port={{ app_web_http_port }} timeout=60
+
+- uri:
+    url: "http://{{ app_web_test_base_uri }}:{{ app_web_http_port }}/admin/ping"
+    method: GET
+    status_code: 200
+    return_content: yes
+  register: ping
+- debug: var=ping
+- assert:
+   that:
+     - "'pong' in ping.content"
+
+- uri:
+    url: "http://{{ app_web_test_base_uri }}:{{ app_web_http_port }}/admin/healthcheck"
+    method: GET
+    status_code: 200
+    return_content: yes
+  register: healthcheck
+- debug: var=healthcheck
+- assert:
+   that:
+     - "'false' not in healthcheck.content"

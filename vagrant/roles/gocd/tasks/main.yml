@@ -1,0 +1,9 @@
+---
+
+- include: common.yml
+
+- include: server.yml
+  when: gocd_server
+
+- include: agent.yml
+  when: gocd_agent

@@ -1,0 +1,7 @@
+---
+
+app_recommendation_user: rec-perf
+app_recommendation_home: "/opt/{{ app_recommendation_user }}"
+
+app_recommendation_http_port: 7070
+app_recommendation_test_base_uri: "{{ ansible_hostname }}"

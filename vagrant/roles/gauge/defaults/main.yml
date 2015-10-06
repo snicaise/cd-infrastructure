@@ -1,0 +1,5 @@
+---
+# defaults file for gauge
+
+gauge_user: go
+gauge_group: go

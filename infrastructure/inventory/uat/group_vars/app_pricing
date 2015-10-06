@@ -1,0 +1,7 @@
+---
+
+app_pricing_user: pri-uat
+app_pricing_home: "/opt/{{ app_pricing_user }}"
+
+app_pricing_http_port: 6060
+app_pricing_test_base_uri: "{{ ansible_hostname }}"

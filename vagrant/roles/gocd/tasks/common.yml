@@ -1,0 +1,64 @@
+---
+
+- name: Add gocd bintray apt key
+  apt_key: url=https://bintray.com/user/downloadSubjectPublicKey?username=gocd state=present
+
+- name: Add gocd apt repository
+  sudo: yes
+  apt_repository: repo='deb http://dl.bintray.com/gocd/gocd-deb/ /' state=present update_cache=yes
+
+- name: Install build tools
+  apt: name={{ item }} state=present
+  with_items:
+  - maven
+  - gradle
+  - git
+
+- name: Install gocd dependencies
+  sudo: yes
+  apt: name={{ item }} state=present
+  with_items:
+   - openjdk-7-jdk
+
+- name: Install WebUpd8 apt key
+  apt_key: id=EEA14886 keyserver='keyserver.ubuntu.com' state=present
+
+- name: Install WebUpd8 apt repository
+  apt_repository: repo='ppa:webupd8team/java' state=present update_cache=yes
+
+- name: Accept Oracle Java license
+  debconf: name="{{ item }}" question='shared/accepted-oracle-license-v1-1' value='true' vtype='select'
+  with_items:
+    - oracle-java7-installer
+    - oracle-java8-installer
+
+- name: Install Java packages
+  apt: name={{ item }} state=present force=yes
+  with_items:
+    - oracle-java7-installer
+    - oracle-java8-installer
+
+- name: Create go group
+  group: name=go gid=5000 state=present
+
+- name: Create go user
+  user: uid=5000 name=go group=go home=/var/go state=present comment="Go CD User"
+
+- name: Create go .ssh folder
+  file: path=/var/go/.ssh state=directory owner=go group=go
+
+- name: Add git known host
+  known_hosts:
+    path=/var/go/.ssh/known_hosts
+    name="{{ item }}"
+    key="{{ lookup('pipe', 'ssh-keyscan -t rsa ' + item) }}"
+  with_items: gocd_ssh_know_hosts
+
+- name: Set know host permissions
+  file: path=/var/go/.ssh/known_hosts owner=go group=go mode=0644
+
+- name: Copy ssh private key
+  action: copy src={{ gocd_ssh_private_key }} dest=/var/go/.ssh/id_rsa owner=go group=go mode=0600
+
+- name: Copy ssh public key
+  copy: src={{ gocd_ssh_public_key }} dest=/var/go/.ssh/id_rsa.pub owner=go group=go mode=0644

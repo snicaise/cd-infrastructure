@@ -1,0 +1,36 @@
+---
+
+- name: Install ansible htpasswd dependencies
+  sudo: yes
+  apt: name={{ item }} state=present
+  with_items:
+   - apache2-utils
+   - python-passlib
+
+- stat: path=/etc/go/cruise-config.xml
+  register: conf
+
+- name: Install gocd server
+  apt: pkg=go-server={{ gocd_version }} state=present
+
+- name: Create gocd server configuration file
+  template: src=cruise-config.xml dest=/etc/go/cruise-config.xml owner=go group=go mode=0644
+  notify: restart go-server
+  when: not conf.stat.exists
+
+- name: Create gocd server defaults file
+  template: src=go-server-defaults dest=/etc/default/go-server
+  notify: restart go-server
+
+- name: Create default admin user
+  htpasswd:
+    path={{ gocd_server_password_file }}
+    name={{ gocd_admin_user }}
+    password={{ gocd_admin_password }}
+    crypt_scheme=ldap_sha1
+    owner=go
+    group=go
+    mode=0640
+
+- name: Enable gocd server
+  service: name=go-server state=started enabled=yes

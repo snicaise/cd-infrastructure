@@ -1,0 +1,4 @@
+---
+
+- name: restart app_recommendation
+  service: name={{ app_recommendation_user }} state=restarted

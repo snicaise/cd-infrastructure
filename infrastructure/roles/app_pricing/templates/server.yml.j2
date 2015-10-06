@@ -1,0 +1,35 @@
+server:
+  type: simple
+  applicationContextPath: /
+  adminContextPath: /admin
+
+  connector:
+    type: http
+    port: {{ app_pricing_http_port }}
+
+  requestLog:
+    timeZone: UTC
+    appenders:
+    - type: file
+      threshold: ALL
+      currentLogFilename: log/pricing-access.log
+      archive: true
+      archivedLogFilenamePattern: log/pricing-access-%d.log.gz
+      archivedFileCount: 7
+      timeZone: UTC
+
+logging:
+  level: INFO
+
+  loggers:
+    com.polaris.cd: DEBUG
+
+  appenders:
+    - type: file
+      threshold: DEBUG
+      logFormat: "%-6level [%d{HH:mm:ss.SSS}] [%t] %logger{5} - %msg %n"
+      currentLogFilename: log/pricing.log
+      archive: true
+      archivedLogFilenamePattern: log/pricing-%d.log.gz
+      archivedFileCount: 7
+      timeZone: UTC

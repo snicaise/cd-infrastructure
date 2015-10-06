@@ -1,0 +1,17 @@
+---
+
+- name: install python dependencies
+  apt: pkg={{ item }} state=installed
+  with_items:
+    - python-dev
+    - python-pip
+    - python-virtualenv
+
+- name: install ansible
+  pip: name=ansible state=present
+
+- name: create ansible etc directory
+  file: path=/etc/ansible state=directory owner=root group=root
+
+- name: copy configuration
+  copy: src=ansible.cfg dest=/etc/ansible/ansible.cfg owner=root group=root mode=0644

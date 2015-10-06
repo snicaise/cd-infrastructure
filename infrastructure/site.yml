@@ -1,0 +1,5 @@
+---
+
+- include: deploy_recommendation.yml
+- include: deploy_pricing.yml
+- include: deploy_web.yml

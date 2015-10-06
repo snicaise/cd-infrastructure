@@ -1,0 +1,4 @@
+---
+
+- name: restart app_pricing
+  service: name={{ app_pricing_user }} state=restarted

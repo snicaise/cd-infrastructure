@@ -1,0 +1,39 @@
+---
+
+- hosts: all
+
+  tasks :
+    - name: add ansible authorized key
+      authorized_key: user=vagrant key="{{ lookup('file', '~/.ssh/id_gocd.pub') }}"
+
+
+- hosts: gocd_servers
+
+  sudo: yes
+
+  roles:
+    - { role: gocd, gocd_server: true, gocd_agent: false }
+
+
+- hosts: gocd_agents
+
+  sudo: yes
+
+  roles:
+    - { role: gocd,
+          gocd_server: false,
+          gocd_agent: true,
+          gocd_agent_count: 2,
+          gocd_server_host: "{{ hostvars['goserver']['ansible_eth1']['ipv4']['address'] }}" }
+    - { role: ansible }
+    - { role: gauge }
+
+  tasks:
+    - name: Add git known host for ansible
+      known_hosts:
+        path: "/var/go/.ssh/known_hosts"
+        name: "{{ item }}"
+        key: "{{ lookup('pipe', 'ssh-keyscan -t rsa ' + item) }}"
+      with_items:
+        - "{{ hostvars['server1']['ansible_eth1']['ipv4']['address'] }}"
+        - "{{ hostvars['server2']['ansible_eth1']['ipv4']['address'] }}"

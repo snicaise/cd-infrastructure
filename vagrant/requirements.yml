@@ -1,0 +1,3 @@
+- src: https://github.com/snicaise/gocd
+  version: v1.1
+  path: roles

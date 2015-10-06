@@ -1,0 +1,14 @@
+# {{ ansible_managed }}
+
+GO_SERVER={{ gocd_server_host }}
+export GO_SERVER
+
+GO_SERVER_PORT={{ gocd_server_port }}
+export GO_SERVER_PORT
+
+AGENT_WORK_DIR=/var/lib/${SERVICE_NAME:-go-agent}
+export AGENT_WORK_DIR
+
+DAEMON=Y
+VNC=N
+export JAVA_HOME="{{ gocd_java_home }}"
