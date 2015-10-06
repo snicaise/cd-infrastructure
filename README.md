@@ -108,12 +108,14 @@ TODO
 ## Prerequis
 
 Prérequis :
+
 1. [virtualbox](https://www.virtualbox.org) (testé avec la 5.0.4)
 2. [vagrant](https://www.vagrantup.com) (testé avec la 1.7.4)
 3. [ansible](http://www.ansible.com) (testé avec la 1.9.3)
 4. Suffisamment de RAM et de CPU pour lancer 4 VMs
 
 Recommandé :
+
 1. plugin vagrant [vagrant-hostmanager](https://github.com/smdahlen/vagrant-hostmanager)
 2. plugin vagrant [vagrant-cachier](https://github.com/fgrehm/vagrant-cachier)
 
