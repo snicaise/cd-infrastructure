@@ -34,7 +34,7 @@ Le site d'AirCorp est constitué de 3 applications java basés sur dropwizard :
 
 Les projets suivant supportent la stratégie de test :
 - [cd-endtoend-test](https://github.com/snicaise/cd-endtoend-test) : vérifie que le système répond aux exigences et atteint ses objectifs, en testant l'ensemble du système, de bout en bout.
-- [cd-performance](https://github.com/snicaise/cd-performance) : tests de charge
+- [cd-performance-test](https://github.com/snicaise/cd-performance-test) : tests de charge
 
 ```
 Principaux flux
@@ -128,7 +128,7 @@ ssh-keygen -t rsa -b 4096 -C "gocd@example.com" > ~/.ssh/id_gocd
 - Forker les projets sur github et ajouter la clef ssh généré à l'étape précédente à votre compte github (confer [Generating SSH keys](https://help.github.com/articles/generating-ssh-keys/)) :
   - [cd-infrastructure](https://github.com/snicaise/cd-infrastructure)
   - [cd-endtoend-test](https://github.com/snicaise/cd-endtoend-test)
-  - [cd-performance](https://github.com/snicaise/cd-performance)
+  - [cd-performance-test](https://github.com/snicaise/cd-performance-test)
   - [cd-pricing](https://github.com/snicaise/cd-pricing)
   - [cd-recommendation](https://github.com/snicaise/cd-recommendation)
   - [cd-web](https://github.com/snicaise/cd-web)
