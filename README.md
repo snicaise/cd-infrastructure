@@ -1,11 +1,11 @@
 # Sommaire
 
-- [Presentation](#presentation)
+- [Présentation](#Presentation)
     - [Stack applicative](#Stack applicative)
     - [Stack technique](#Stack technique)
     - [Pipeline](#pipeline)
-- [Installation](#intallation)
-  - [Prérequis](#Prérequis)
+- [Installation](#Intallation)
+  - [Prérequis](#Prerequis)
   - [Forker les projets](#Forker les projets sur github)
   - [Lancer les machines virtuels](#Lancer les machines virtuels)
 - [Liens utiles](#Liens utiles)
@@ -105,7 +105,7 @@ TODO
 
 # Installation
 
-## Prérequis
+## Prerequis
 
 Prérequis :
 1. [virtualbox](https://www.virtualbox.org) (testé avec la 5.0.4)
@@ -123,7 +123,7 @@ Recommandé :
 ```
 ssh-keygen -t rsa -b 4096 -C "gocd@example.com" > ~/.ssh/id_gocd
 ```
-- Forker les projets sur github et leur ajouter la clef ssh généré à l'étape précédente (voir la doc [github deploy keys](https://developer.github.com/guides/managing-deploy-keys/#deploy-keys)) :
+- Forker les projets sur github et ajouter la clef ssh généré à l'étape précédente à votre compte github (confer [Generating SSH keys](https://help.github.com/articles/generating-ssh-keys/)) :
   - [cd-infrastructure](https://github.com/snicaise/cd-infrastructure)
   - [cd-endtoend-test](https://github.com/snicaise/cd-endtoend-test)
   - [cd-performance](https://github.com/snicaise/cd-performance)
