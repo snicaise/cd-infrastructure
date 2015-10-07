@@ -27,6 +27,7 @@
           gocd_server_host: "{{ hostvars['goserver']['ansible_eth1']['ipv4']['address'] }}" }
     - { role: ansible }
     - { role: gauge }
+    - { role: selenium }
 
   tasks:
     - name: Add git known host for ansible

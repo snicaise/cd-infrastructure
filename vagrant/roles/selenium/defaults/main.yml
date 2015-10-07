@@ -1,0 +1,5 @@
+---
+# defaults file for selenium
+
+selenium_user: selenium
+selenium_group: selenium

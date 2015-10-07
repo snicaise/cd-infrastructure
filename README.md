@@ -65,6 +65,7 @@ La stack est basé sur :
 - [wiremock](http://wiremock.org) - WireMock is a flexible library for stubbing and mocking web services. Unlike general purpose mocking tools it works by creating an actual HTTP server that your code under test can connect to as it would a real web service.
 - [rest-assured](https://github.com/jayway/rest-assured) - Testing and validation of REST services in Java is harder than in dynamic languages such as Ruby and Groovy. REST Assured brings the simplicity of using these languages into the Java domain.
 - [gauge](http://getgauge.io) - Test automation in the business language
+- [selenium](http://www.seleniumhq.org) - Selenium automates browsers.
 - [gatling](http://gatling.io) - Gatling is a highly capable load testing tool. It is designed for ease of use, maintainability and high performance.
 
 ## Stack technique
@@ -199,6 +200,5 @@ Environnement de production
 # TODO
 
 - [ ] pipeline de release rapide
-- [ ] tests selenium
 - [ ] haproxy / déploiement sans interruption de service
 - [ ] ajouter des bases de données

@@ -1,0 +1,55 @@
+---
+# tasks file for selenium
+
+- name: create selenium group
+  group:
+    name: "{{ selenium_group }}"
+    state: present
+
+- name: create selenium user
+  user:
+    name: "{{ selenium_user }}"
+    group: "{{ selenium_group }}"
+    state: present
+
+- name: create selenium install dir
+  file:
+    path: "/opt/selenium"
+    owner: "{{ selenium_user }}"
+    group: "{{ selenium_group }}"
+    mode: 0755
+    state: directory
+
+- name: check if selenium is downloaded
+  stat:
+    path: /opt/selenium/selenium-server-standalone-2.47.1.jar
+  register: selenium_install
+
+- name: download selenium
+  get_url:
+    url: http://selenium-release.storage.googleapis.com/2.47/selenium-server-standalone-2.47.1.jar
+    dest: /opt/selenium/selenium-server-standalone-2.47.1.jar
+  when: not selenium_install.stat.exists
+
+- name: install dependencies
+  apt:
+    name: "{{ item }}"
+    state: present
+    force: yes
+  with_items:
+    - xvfb
+    - firefox
+
+- name: create selenium init.d script
+  template:
+    src: init.j2
+    dest: /etc/init.d/selenium
+    owner: root
+    group: root
+    mode: 0755
+
+- name: enable selenium service
+  service:
+    name: selenium
+    state: started
+    enabled: yes
