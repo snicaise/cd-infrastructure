@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <cruise xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="cruise-config.xsd" schemaVersion="75">
-  <server artifactsdir="artifacts" commandRepositoryLocation="default">
+  <server artifactsdir="artifacts" siteUrl="http://goserver.dev.polaris.com:8153" jobTimeout="10" commandRepositoryLocation="default">
     <security>
       <passwordFile path="/etc/go/passwd" />
       <admins>
@@ -29,6 +29,11 @@
               </exec>
               <exec command="/bin/bash">
                 <arg>-c</arg>
+                <arg>echo ${GO_PIPELINE_LABEL} &gt; recommendation_version.txt</arg>
+                <runif status="passed" />
+              </exec>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
                 <arg>mvn clean install</arg>
                 <runif status="passed" />
               </exec>
@@ -36,11 +41,12 @@
             <artifacts>
               <test src="**/target/surefire-reports" />
               <artifact src="**/target/*.jar" dest="artifacts" />
+              <artifact src="recommendation_version.txt" dest="artifacts" />
             </artifacts>
           </job>
         </jobs>
       </stage>
-      <stage name="component-test">
+      <stage name="component-test" cleanWorkingDir="true">
         <jobs>
           <job name="in-process-test">
             <tasks>
@@ -77,6 +83,11 @@
               </exec>
               <exec command="/bin/bash">
                 <arg>-c</arg>
+                <arg>echo ${GO_PIPELINE_LABEL} &gt; pricing_version.txt</arg>
+                <runif status="passed" />
+              </exec>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
                 <arg>mvn clean install</arg>
                 <runif status="passed" />
               </exec>
@@ -84,11 +95,12 @@
             <artifacts>
               <test src="**/target/surefire-reports" />
               <artifact src="**/target/*.jar" dest="artifacts" />
+              <artifact src="pricing_version.txt" dest="artifacts" />
             </artifacts>
           </job>
         </jobs>
       </stage>
-      <stage name="component-test">
+      <stage name="component-test" cleanWorkingDir="true">
         <jobs>
           <job name="in-process-test">
             <tasks>
@@ -125,6 +137,11 @@
               </exec>
               <exec command="/bin/bash">
                 <arg>-c</arg>
+                <arg>echo ${GO_PIPELINE_LABEL} &gt; web_version.txt</arg>
+                <runif status="passed" />
+              </exec>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
                 <arg>mvn -B clean install</arg>
                 <runif status="passed" />
               </exec>
@@ -132,11 +149,12 @@
             <artifacts>
               <test src="**/target/surefire-reports" />
               <artifact src="**/target/*.jar" dest="artifacts" />
+              <artifact src="web_version.txt" dest="artifacts" />
             </artifacts>
           </job>
         </jobs>
       </stage>
-      <stage name="integration-test">
+      <stage name="integration-test" cleanWorkingDir="true">
         <jobs>
           <job name="in-process-test">
             <tasks>
@@ -151,7 +169,7 @@
           </job>
         </jobs>
       </stage>
-      <stage name="component-test">
+      <stage name="component-test" cleanWorkingDir="true">
         <jobs>
           <job name="in-process-test">
             <tasks>
@@ -168,13 +186,19 @@
         </jobs>
       </stage>
     </pipeline>
-    <pipeline name="integration" labeltemplate="site-${COUNT}_r${recommendation}_p${pricing}_w${web}" isLocked="false">
+    <pipeline name="integration" labeltemplate="site-${COUNT}_r${recommendation}_p${pricing}_w${web}" isLocked="true">
       <environmentvariables>
         <variable name="JAVA_HOME">
           <value>/usr/lib/jvm/java-8-oracle</value>
         </variable>
         <variable name="ANSIBLE_FORCE_COLOR">
           <value>true</value>
+        </variable>
+        <variable name="env">
+          <value>integration</value>
+        </variable>
+        <variable name="ansible_extras">
+          <value>-c paramiko</value>
         </variable>
       </environmentvariables>
       <materials>
@@ -198,14 +222,14 @@
               </fetchartifact>
               <exec command="/bin/bash">
                 <arg>-c</arg>
-                <arg>ansible-playbook -c paramiko -i ~/ansible/inventory/integration -u vagrant ~/ansible/site.yml --extra-vars "app_recommendation_artifact=`pwd`/target/recommendation-core.jar app_pricing_artifact=`pwd`/target/pricing-core.jar app_web_artifact=`pwd`/target/web-core.jar"</arg>
+                <arg>ansible-playbook ${ansible_extras} -i ~/ansible/inventory/${env} -u vagrant ~/ansible/site.yml --extra-vars "app_recommendation_artifact=`pwd`/target/recommendation-core.jar app_pricing_artifact=`pwd`/target/pricing-core.jar app_web_artifact=`pwd`/target/web-core.jar"</arg>
                 <runif status="passed" />
               </exec>
             </tasks>
           </job>
         </jobs>
       </stage>
-      <stage name="endtoend-test">
+      <stage name="endtoend-test" cleanWorkingDir="true">
         <jobs>
           <job name="endtoend-test">
             <tasks>
@@ -232,17 +256,22 @@
     </pipeline>
   </pipelines>
   <pipelines group="release">
-    <pipeline name="uat" labeltemplate="${integration}" isLocked="false">
+    <pipeline name="uat" labeltemplate="${integration}" isLocked="true">
       <environmentvariables>
         <variable name="ANSIBLE_FORCE_COLOR">
           <value>true</value>
+        </variable>
+        <variable name="env">
+          <value>uat</value>
+        </variable>
+        <variable name="ansible_extras">
+          <value>-c paramiko</value>
         </variable>
       </environmentvariables>
       <materials>
         <pipeline pipelineName="integration" stageName="endtoend-test" />
       </materials>
-      <stage name="uat-begin" fetchMaterials="false">
-        <approval type="manual" />
+      <stage name="uat-begin" fetchMaterials="false" cleanWorkingDir="true">
         <jobs>
           <job name="create-uat-ticket">
             <tasks>
@@ -256,6 +285,7 @@
         </jobs>
       </stage>
       <stage name="deploy-uat" cleanWorkingDir="true">
+        <approval type="manual" />
         <jobs>
           <job name="deploy-all">
             <tasks>
@@ -270,7 +300,7 @@
               </fetchartifact>
               <exec command="/bin/bash">
                 <arg>-c</arg>
-                <arg>ansible-playbook -c paramiko -i ~/ansible/inventory/uat -u vagrant ~/ansible/site.yml --extra-vars "app_recommendation_artifact=`pwd`/target/recommendation-core.jar app_pricing_artifact=`pwd`/target/pricing-core.jar app_web_artifact=`pwd`/target/web-core.jar"</arg>
+                <arg>ansible-playbook ${ansible_extras} -i ~/ansible/inventory/${env} -u vagrant ~/ansible/site.yml --extra-vars "app_recommendation_artifact=`pwd`/target/recommendation-core.jar app_pricing_artifact=`pwd`/target/pricing-core.jar app_web_artifact=`pwd`/target/web-core.jar"</arg>
                 <runif status="passed" />
               </exec>
             </tasks>
@@ -291,7 +321,7 @@
         </jobs>
       </stage>
     </pipeline>
-    <pipeline name="performance" labeltemplate="${integration}" isLocked="false">
+    <pipeline name="performance" labeltemplate="${integration}" isLocked="true">
       <environmentvariables>
         <variable name="JAVA_HOME">
           <value>/usr/lib/jvm/java-8-oracle</value>
@@ -302,13 +332,18 @@
         <variable name="BASE_URL">
           <value>http://server2.dev.polaris.com:7080/api</value>
         </variable>
+        <variable name="env">
+          <value>performance</value>
+        </variable>
+        <variable name="ansible_extras">
+          <value>-c paramiko</value>
+        </variable>
       </environmentvariables>
       <materials>
         <pipeline pipelineName="integration" stageName="endtoend-test" />
         <git url="git@github.com:snicaise/cd-performance-test.git" materialName="performance" />
       </materials>
-      <stage name="performance-begin">
-        <approval type="manual" />
+      <stage name="performance-begin" fetchMaterials="false" cleanWorkingDir="true">
         <jobs>
           <job name="no-op">
             <tasks>
@@ -320,7 +355,8 @@
           </job>
         </jobs>
       </stage>
-      <stage name="deploy-performance" fetchMaterials="false" cleanWorkingDir="true">
+      <stage name="deploy-performance" cleanWorkingDir="true">
+        <approval type="manual" />
         <jobs>
           <job name="deploy-all">
             <tasks>
@@ -335,7 +371,7 @@
               </fetchartifact>
               <exec command="/bin/bash">
                 <arg>-c</arg>
-                <arg>ansible-playbook -v -c paramiko -i ~/ansible/inventory/performance  -u vagrant ~/ansible/site.yml --extra-vars "app_recommendation_artifact=`pwd`/target/recommendation-core.jar app_pricing_artifact=`pwd`/target/pricing-core.jar app_web_artifact=`pwd`/target/web-core.jar"</arg>
+                <arg>ansible-playbook ${ansible_extras} -i ~/ansible/inventory/${env} -u vagrant ~/ansible/site.yml --extra-vars "app_recommendation_artifact=`pwd`/target/recommendation-core.jar app_pricing_artifact=`pwd`/target/pricing-core.jar app_web_artifact=`pwd`/target/web-core.jar"</arg>
                 <runif status="passed" />
               </exec>
             </tasks>
@@ -361,7 +397,7 @@
           </job>
         </jobs>
       </stage>
-      <stage name="performance-end">
+      <stage name="performance-end" fetchMaterials="false" cleanWorkingDir="true">
         <approval type="manual" />
         <jobs>
           <job name="performance-end">
@@ -380,13 +416,18 @@
         <variable name="ANSIBLE_FORCE_COLOR">
           <value>true</value>
         </variable>
+        <variable name="env">
+          <value>production</value>
+        </variable>
+        <variable name="ansible_extras">
+          <value>-c paramiko</value>
+        </variable>
       </environmentvariables>
       <materials>
         <pipeline pipelineName="uat" stageName="uat-end" />
         <pipeline pipelineName="performance" stageName="performance-end" materialName="performance" />
       </materials>
-      <stage name="production-begin">
-        <approval type="manual" />
+      <stage name="production-begin" fetchMaterials="false" cleanWorkingDir="true">
         <jobs>
           <job name="create-production-ticket">
             <tasks>
@@ -399,7 +440,8 @@
           </job>
         </jobs>
       </stage>
-      <stage name="deploy-prod">
+      <stage name="deploy-prod" fetchMaterials="false" cleanWorkingDir="true">
+        <approval type="manual" />
         <jobs>
           <job name="deploy-all">
             <tasks>
@@ -412,16 +454,40 @@
               <fetchartifact pipeline="web/integration/uat" stage="commit" job="build" srcdir="artifacts/web-core/target/">
                 <runif status="passed" />
               </fetchartifact>
+              <fetchartifact pipeline="recommendation/integration/uat" stage="commit" job="build" srcfile="artifacts/recommendation_version.txt" dest="versions">
+                <runif status="passed" />
+              </fetchartifact>
+              <fetchartifact pipeline="pricing/integration/uat" stage="commit" job="build" srcfile="artifacts/pricing_version.txt" dest="versions">
+                <runif status="passed" />
+              </fetchartifact>
+              <fetchartifact pipeline="web/integration/uat" stage="commit" job="build" srcfile="artifacts/web_version.txt" dest="versions">
+                <runif status="passed" />
+              </fetchartifact>
               <exec command="/bin/bash">
                 <arg>-c</arg>
-                <arg>ansible-playbook -vv -c paramiko -i ~/ansible/inventory/production -u vagrant ~/ansible/site.yml --extra-vars "app_recommendation_artifact=`pwd`/target/recommendation-core.jar app_pricing_artifact=`pwd`/target/pricing-core.jar app_web_artifact=`pwd`/target/web-core.jar"</arg>
+                <arg>ansible-playbook ${ansible_extras} -i ~/ansible/inventory/${env} -u vagrant ~/ansible/site.yml --extra-vars "app_recommendation_artifact=`pwd`/target/recommendation-core.jar app_pricing_artifact=`pwd`/target/pricing-core.jar app_web_artifact=`pwd`/target/web-core.jar"</arg>
+                <runif status="passed" />
+              </exec>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>curl -X POST -u admin:password -d "value=`cat versions/recommendation_version.txt`" http://goserver.dev.polaris.com:8153/go/properties/${GO_PIPELINE_NAME}/${GO_PIPELINE_COUNTER}/${GO_STAGE_NAME}/${GO_STAGE_COUNTER}/${GO_JOB_NAME}/recommendation_version</arg>
+                <runif status="passed" />
+              </exec>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>curl -X POST -u admin:password -d "value=`cat versions/pricing_version.txt`" http://goserver.dev.polaris.com:8153/go/properties/${GO_PIPELINE_NAME}/${GO_PIPELINE_COUNTER}/${GO_STAGE_NAME}/${GO_STAGE_COUNTER}/${GO_JOB_NAME}/pricing_version</arg>
+                <runif status="passed" />
+              </exec>
+              <exec command="/bin/bash">
+                <arg>-c</arg>
+                <arg>curl -X POST -u admin:password -d "value=`cat versions/web_version.txt`" http://goserver.dev.polaris.com:8153/go/properties/${GO_PIPELINE_NAME}/${GO_PIPELINE_COUNTER}/${GO_STAGE_NAME}/${GO_STAGE_COUNTER}/${GO_JOB_NAME}/web_version</arg>
                 <runif status="passed" />
               </exec>
             </tasks>
           </job>
         </jobs>
       </stage>
-      <stage name="production-end">
+      <stage name="production-end" fetchMaterials="false" cleanWorkingDir="true">
         <jobs>
           <job name="close-production-ticket">
             <tasks>
@@ -469,4 +535,8 @@
       </stage>
     </pipeline>
   </pipelines>
+  <agents>
+    <agent hostname="goagent" ipaddress="10.0.2.15" uuid="f397d178-3ed8-46ee-88ce-b74bae97171e" />
+    <agent hostname="goagent" ipaddress="10.0.2.15" uuid="73f594ee-6e96-42f9-b139-04d896f68ac2" />
+  </agents>
 </cruise>
